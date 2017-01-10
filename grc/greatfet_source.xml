@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<block>
+  <name>GreatFET source</name>
+  <key>greatfet_source</key>
+  <category>[GreatFET]</category>
+  <import>import gr_greatfet</import>
+  <make>gr_greatfet.source($serial)</make>
+
+  <param>
+    <name>Serial number</name>
+    <key>serial</key>
+    <type>string</type>
+  </param>
+
+  <source>
+    <name>out</name>
+    <type>byte</type>
+  </source>
+</block>
