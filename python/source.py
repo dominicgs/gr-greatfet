@@ -26,6 +26,8 @@ import greatfet
 from greatfet import GreatFET
 from greatfet.protocol import vendor_requests
 
+USB_XFER = 0x4000
+
 class source(gr.basic_block):
     """
     docstring for block source
@@ -36,6 +38,7 @@ class source(gr.basic_block):
             name="source",
             in_sig=None,
             out_sig=[numpy.byte])
+        self.history = []
         try:
             # self.device = GreatFET(serial_number=serial)
             self.device = GreatFET()
@@ -44,9 +47,9 @@ class source(gr.basic_block):
         self.device.vendor_request_out(vendor_requests.SDIR_START)
 
     def general_work(self, input_items, output_items):
-        if len(output_items[0]) < 0x4000:
-            return 0
-        self.consume_each(len(output_items[0]))
-        data = self.device.device.read(0x81, 0x4000, 1000)
-        output_items[0][:len(data)] = numpy.array(data, dtype=numpy.byte)
-        return len(output_items[0])
+        if len(self.history) < len(output_items[0]):
+            self.history.extend(self.device.device.read(0x81, 0x4000, 1000))
+        out_len = min(len(output_items[0]), len(self.history))
+        output_items[0][:out_len] = numpy.array(self.history[:out_len], dtype=numpy.byte)
+        self.history = self.history[out_len:]
+        return out_len
