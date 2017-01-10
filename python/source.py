@@ -21,16 +21,17 @@
 
 import numpy
 from gnuradio import gr
+import time
 import greatfet
 from greatfet import GreatFET
 from greatfet.protocol import vendor_requests
 
-class source(gr.sync_block):
+class source(gr.basic_block):
     """
     docstring for block source
     """
     def __init__(self, serial=None):
-        gr.sync_block.__init__(
+        gr.basic_block.__init__(
             self,
             name="source",
             in_sig=None,
@@ -42,7 +43,10 @@ class source(gr.sync_block):
             raise
         self.device.vendor_request_out(vendor_requests.SDIR_START)
 
-    def work(self, input_items, output_items):
-        output_items[0] = self.device.device.read(0x81, 0x4000, 1000)
+    def general_work(self, input_items, output_items):
+        if len(output_items[0]) < 0x4000:
+            return 0
+        self.consume_each(len(output_items[0]))
+        data = self.device.device.read(0x81, 0x4000, 1000)
+        output_items[0][:len(data)] = numpy.array(data, dtype=numpy.byte)
         return len(output_items[0])
-
